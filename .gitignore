@@ -48,3 +48,11 @@ Thumbs.db
 # Temporary / Runner execution artifacts
 tmp/
 temp/
+
+# AI Agent skills & local tool configs
+.agents/
+.claude/
+.windsurf/
+.cursor/
+skills-lock.json
+
