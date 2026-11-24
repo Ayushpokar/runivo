@@ -1,4 +1,5 @@
 import { Prisma } from '../../generated/prisma/client.js';
+import env from '../../config/env.js';
 import {
   SubmissionsRepository,
   submissionsRepository,
@@ -41,8 +42,9 @@ export class SubmissionsService {
   async createSubmission(
     data: CreateSubmissionInput
   ): Promise<SubmissionDetail> {
+    let submission: SubmissionDetail;
     try {
-      return await this.repository.create(data);
+      submission = await this.repository.create(data);
     } catch (error: unknown) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -51,6 +53,47 @@ export class SubmissionsService {
         throw new SubmissionError(404, 'User or problem not found');
       }
       throw error;
+    }
+
+    // Asynchronously dispatch submission + problem test cases to FastAPI Judge Service
+    void this.dispatchToJudgeService(submission);
+
+    return submission;
+  }
+
+  private async dispatchToJudgeService(
+    submission: SubmissionDetail
+  ): Promise<void> {
+    try {
+      const testCases = await this.repository.findTestCasesByProblemId(
+        BigInt(submission.problem_id)
+      );
+
+      const response = await fetch(
+        `${env.JUDGE_SERVICE_URL}/api/v1/evaluate`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            submission_id: submission.id,
+            problem_id: submission.problem_id,
+            language: submission.language,
+            source_code: submission.source_code,
+            test_cases: testCases,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.warn(
+          `Judge service returned HTTP ${response.status} for submission ${submission.id}`
+        );
+      }
+    } catch (error: unknown) {
+      console.warn(
+        `Could not reach judge-service at ${env.JUDGE_SERVICE_URL} for submission ${submission.id}:`,
+        error instanceof Error ? error.message : error
+      );
     }
   }
 

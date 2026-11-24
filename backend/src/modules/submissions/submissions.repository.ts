@@ -194,6 +194,33 @@ export class SubmissionsRepository {
 
     return mapSubmissionDetail(updated);
   }
+
+  async findTestCasesByProblemId(problemId: bigint): Promise<
+    Array<{
+      id: number;
+      input_data: string;
+      expected_output: string;
+      position: number;
+    }>
+  > {
+    const records = await prisma.test_cases.findMany({
+      where: { problem_id: problemId },
+      orderBy: [{ position: 'asc' }, { id: 'asc' }],
+      select: {
+        id: true,
+        input_data: true,
+        expected_output: true,
+        position: true,
+      },
+    });
+
+    return records.map((tc) => ({
+      id: Number(tc.id),
+      input_data: tc.input_data,
+      expected_output: tc.expected_output,
+      position: tc.position,
+    }));
+  }
 }
 
 export const submissionsRepository = new SubmissionsRepository();

@@ -3,6 +3,13 @@ node_modules/
 .pnp
 .pnp.js
 
+# Python virtual environments & caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
 # Environment variables & secrets
 .env
 .env.*

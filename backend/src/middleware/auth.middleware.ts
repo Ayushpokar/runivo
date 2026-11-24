@@ -19,6 +19,7 @@ export function requireAuth(
     return;
   }
 
+  
   const token = authHeader.slice('Bearer '.length).trim();
   const payload = verifyJwt(token);
 

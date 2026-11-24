@@ -26,6 +26,7 @@ const envSchema = z.object({
     .min(8)
     .default('runivo-dev-secret-change-in-production'),
   CORS_ORIGIN: z.string().default('*'),
+  JUDGE_SERVICE_URL: z.string().default('http://localhost:8000'),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
